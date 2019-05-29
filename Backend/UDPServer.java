@@ -55,14 +55,11 @@ public class UDPServer extends Thread {
 						ipDestino+=String.valueOf(mensaje.charAt(i));
 						
 					Message message=new Message(paquete.getAddress().toString().substring(1), ipDestino, paquete.getPort(), mensaje.substring(i+1) );
-					MessageHandler messageHandler=new MessageHandler( true,message,messageBuffer );
-					messageHandler.start();
-					
-					
-					
+					MessageHandler handler=new MessageHandler(message,messageBuffer );
+					handler.start();
 				}
 				else if(mensaje.startsWith("RECEIVE")) {
-					System.out.println("Jeje");
+					MessageHandler handler=new MessageHandler(paquete.getAddress().toString().substring(1),paquete.getPort(),messageBuffer);
 				}
 
 				// Lo mostramos por pantalla
