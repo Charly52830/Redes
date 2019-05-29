@@ -20,11 +20,11 @@ public class UDPServer extends Thread {
 	protected final int serverPort;
 	
 	protected InetAddress addressCliente;
-    protected byte[] mensaje2_bytes;
-    protected final int MAX_BUFFER=256;
-    protected DatagramPacket paquete;
-    protected byte[] mensaje_bytes;
-    protected DatagramPacket envPaquete;
+	protected byte[] mensaje2_bytes;
+	protected final int MAX_BUFFER=256;
+	protected DatagramPacket paquete;
+	protected byte[] mensaje_bytes;
+	protected DatagramPacket envPaquete;
 	
 	public UDPServer(int serverPort) throws SocketException {
 		//Creamos el socket.
@@ -60,6 +60,7 @@ public class UDPServer extends Thread {
 				}
 				else if(mensaje.startsWith("RECEIVE")) {
 					MessageHandler handler=new MessageHandler(paquete.getAddress().toString().substring(1),paquete.getPort(),messageBuffer);
+					MessageHandler.start();
 				}
 
 				// Lo mostramos por pantalla
