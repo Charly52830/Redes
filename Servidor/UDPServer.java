@@ -60,7 +60,7 @@ public class UDPServer extends Thread {
 				}
 				else if(mensaje.startsWith("RECEIVE")) {
 					MessageHandler handler=new MessageHandler(paquete.getAddress().toString().substring(1),paquete.getPort(),messageBuffer);
-					MessageHandler.start();
+					handler.start();
 				}
 
 				// Lo mostramos por pantalla

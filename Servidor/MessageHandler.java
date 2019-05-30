@@ -14,6 +14,7 @@ public class MessageHandler extends Thread {
 	protected Message message;
 	protected String hostAddress;
 	protected int port;
+	protected Socket socket=null;
 	
 	private final int MAX_MESSAGE_SIZE=50;
 	
@@ -33,7 +34,6 @@ public class MessageHandler extends Thread {
 	}
 	
 	public void run() {
-		//Si va a agregar o sacar elementos del buffer.
 		if(send) {
 			enqueueMessage(message);
 			dequeueMessages(message.getDestinationAddress(),message.getPort());
@@ -53,31 +53,36 @@ public class MessageHandler extends Thread {
 			return false;
 		else
 			q.add(message);
-		
-		System.out.println("Tamanio de la cola "+q.size());
-		
 		return true;
 	}
 	
 	private void dequeueMessages(String hostAddress,int port) {
+		port=52831;
 		if(isListening(hostAddress,port)) {
 			try {
-				Socket socket=new Socket(hostAddress,port);
 				DataOutputStream out =new DataOutputStream(socket.getOutputStream());
 				Queue<Message> q=messageBuffer.get(hostAddress);
-				while(q.size() > 0) {
-					Message message=q.remove();
-					out.writeUTF(message.toString());
+				if(q != null) {
+					while(q.size() > 0) {
+						Message message=q.remove();
+						System.out.println("Mensaje enviado al host "+hostAddress+": "+message.getMessage());
+						out.writeUTF(message.toString());
+					}
+					messageBuffer.remove(hostAddress);
 				}
-				messageBuffer.remove(hostAddress);
+				out.writeUTF("END");
 				socket.close();
+				socket=null;
 			}
 			catch(UnknownHostException e) {
 				System.err.println("Host desconocido "+e.getMessage());
 			}
 			catch(IOException e) {
-				System.err.println("Error de entrada/salida "+e.getMessage());
+				System.err.printf("Error de entrada/salida %s\n",e.getMessage());
 			}
+		}
+		else {
+			System.out.printf("%s no está escuchando\n",hostAddress);
 		}
 		
 	}
@@ -93,11 +98,12 @@ public class MessageHandler extends Thread {
 		}
 		finally {
 			if(s != null)
-            try {
-            	s.close();
-            }
-            catch(Exception e){}
-		}
-	}
-	
+				try {
+            	if(socket == null)
+            		socket=s;
+				}
+				catch(Exception e){
+				}
+			}
+	}	
 }

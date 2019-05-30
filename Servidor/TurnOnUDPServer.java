@@ -1,11 +1,11 @@
 import java.net.*;
 import java.io.*;
 
-public class ServidorUDP{
+public class TurnOnUDPServer {
     
     public final int PUERTO_SERVER;
     
-    public ServidorUDP(int puertoS){
+    public TurnOnUDPServer(int puertoS){
         PUERTO_SERVER=puertoS;
     }
     public void inicia()throws Exception{
