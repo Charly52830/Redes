@@ -1,34 +1,38 @@
 import java.net.*;
 import java.io.*;
- 
+
+/**
+*	Clase que corre un hilo donde se crea una conexión TCP para escuchar.
+*/
 public class ListeningClient extends Thread {
-    protected ServerSocket socket;
-    protected DataInputStream in;
-    protected Socket socket_cli;
-    protected final int PUERTO_SERVER;
-    
-    public ListeningClient(int puertoS)throws Exception{
-        PUERTO_SERVER=puertoS;
-    }
-    
-    public void run() { 
-        try {
-	        while(true) {
-				socket = new ServerSocket(PUERTO_SERVER);
-				socket_cli = socket.accept();
-				in =new DataInputStream(socket_cli.getInputStream());
+	
+	protected ServerSocket socket;
+	protected DataInputStream in;
+	protected Socket socketCliente;
+	protected final int serverPort;
+	
+	public ListeningClient(int serverPort)throws Exception{
+		this.serverPort=serverPort;
+	}
+	
+	public void run() { 
+		try {
+			while(true) {
+				socket = new ServerSocket(serverPort);
+				socketCliente = socket.accept();
+				in =new DataInputStream(socketCliente.getInputStream());
 				while(true) {
 					String mensaje = in.readUTF();
 					if(mensaje.startsWith("END"))
 						break;
-					System.out.println("Mensaje recibido\n"+mensaje);
+					System.out.printf("Mensaje recibido:\n%s\n",mensaje);
 				}				
 				socket.close();
 				socket=null;
-	        }
-        }
-        catch (IOException e) {
-			System.err.println("Ocurrió un error: "+e.getMessage());
-        }
+			}
+		}
+		catch (IOException e) {
+			System.err.printf("Ocurrió un error: %s\n",e.getMessage());
+		}
     }
 }
