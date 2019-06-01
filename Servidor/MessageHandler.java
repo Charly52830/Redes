@@ -9,39 +9,43 @@ import java.io.*;
 public class MessageHandler extends Thread {
 	
 	protected boolean send;
-	protected boolean successfulEnqueue;
 	protected Map<String, Queue<Message> > messageBuffer;
 	protected Message message;
 	protected String hostAddress;
-	protected int port;
+	//Puerto donde los clientes escuchan 
+	protected int port=52831;	
 	protected Socket socket=null;
 	
-	private final int MAX_MESSAGE_SIZE=50;
+	//Cantidad máxima de mensajes en la cola.
+	private final int MAX_QUEUE_SIZE=50;
 	
 	public MessageHandler(Message message,Map<String, Queue<Message> > messageBuffer) {
 		send=true;
 		this.messageBuffer=messageBuffer;
-		
 		this.message=message;
 	}
 	
-	public MessageHandler(String hostAddress,int port,Map<String, Queue<Message> > messageBuffer) {
+	public MessageHandler(String hostAddress,Map<String, Queue<Message> > messageBuffer) {
 		send=false;
 		this.messageBuffer=messageBuffer;
-		
 		this.hostAddress=hostAddress;
-		this.port=port;
 	}
 	
+	/**
+	*	Método que corre el thread. Encola o manda mensajes al host indicado.
+	*/
 	public void run() {
 		if(send) {
 			enqueueMessage(message);
-			dequeueMessages(message.getDestinationAddress(),message.getPort());
+			dequeueMessages(message.getDestinationAddress());
 		}
 		else 
-			dequeueMessages(hostAddress,port);
+			dequeueMessages(hostAddress);
 	}
 	
+	/**
+	*	Método que encola un mensaje en caché.
+	*/
 	private boolean enqueueMessage(Message message) {
 		//TO DO: sustituir el boolean por excepciones.
 		Queue<Message> q=messageBuffer.get(message.getDestinationAddress());
@@ -49,15 +53,17 @@ public class MessageHandler extends Thread {
 			q=new LinkedList<>();
 			messageBuffer.put(message.getDestinationAddress(),q);
 		}
-		if(q.size() == MAX_MESSAGE_SIZE) 
+		if(q.size() == MAX_QUEUE_SIZE) 
 			return false;
 		else
 			q.add(message);
 		return true;
 	}
 	
-	private void dequeueMessages(String hostAddress,int port) {
-		port=52831;
+	/**
+	*	Método que envía mensajes almacenados en el caché. 
+	*/
+	private void dequeueMessages(String hostAddress) {
 		if(isListening(hostAddress,port)) {
 			try {
 				DataOutputStream out =new DataOutputStream(socket.getOutputStream());
@@ -71,22 +77,26 @@ public class MessageHandler extends Thread {
 					messageBuffer.remove(hostAddress);
 				}
 				out.writeUTF("END");
+				out.flush();
 				socket.close();
 				socket=null;
 			}
 			catch(UnknownHostException e) {
-				System.err.println("Host desconocido "+e.getMessage());
+				System.err.printf("Host desconocido: %s\n",e.getMessage());
 			}
 			catch(IOException e) {
-				System.err.printf("Error de entrada/salida %s\n",e.getMessage());
+				System.err.printf("Error de entrada/salida: %s\n",e.getMessage());
 			}
 		}
 		else {
-			System.out.printf("%s no está escuchando\n",hostAddress);
+			System.out.printf("El host %s no está escuchando\n",hostAddress);
 		}
 		
 	}
 	
+	/**
+	*	Método que verifica si un host está escuchando en un puerto especifico.
+	*/
 	public boolean isListening(String host,int port) {
 		Socket s = null;
 		try {
@@ -97,13 +107,9 @@ public class MessageHandler extends Thread {
 			return false;
 		}
 		finally {
-			if(s != null)
-				try {
-            	if(socket == null)
-            		socket=s;
-				}
-				catch(Exception e){
-				}
+			if(s != null && socket == null) {
+				socket=s;
 			}
+		}
 	}	
 }
