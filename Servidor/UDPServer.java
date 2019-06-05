@@ -52,10 +52,15 @@ public class UDPServer extends Thread {
 					for(i=5;i < mensaje.length() && mensaje.charAt(i) != 32;i++) 
 						ipDestino.append(mensaje.charAt(i));
 						
-					Message message=new Message(paquete.getAddress().toString().substring(1), ipDestino.toString(), paquete.getPort(), mensaje.substring(i+1) );
+					Message message=new Message(paquete.getAddress().toString().substring(1), ipDestino.toString(), mensaje.substring(i+1) );
 					MessageHandler handler=new MessageHandler(message,messageBuffer );
 					handler.start();
 				}
+				else if(mensaje.startsWith("FILE")) {
+					String hostDestino=mensaje.split(" ")[1];
+					MessageHandler handler=new MessageHandler(hostDestino,paquete.getAddress().toString().substring(1),messageBuffer);
+					handler.start();
+				}	
 				else if(mensaje.startsWith("RECEIVE")) {
 					MessageHandler handler=new MessageHandler(paquete.getAddress().toString().substring(1),messageBuffer);
 					handler.start();
